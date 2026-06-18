@@ -24,14 +24,6 @@
                                 class="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200">
                                 🌙 神秘靈性
                             </button>
-                            {{-- <button type="button"
-                                @click="style = 'mystic'"
-                                :class="style === 'mystic'
-                                    ? 'bg-purple-600 text-white shadow-md'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                                class="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200">
-                                🌙 神秘靈性
-                            </button> --}}
                             <button type="button" @click="style = 'rational'"
                                 :class="style === 'rational'
                                     ?
@@ -56,11 +48,11 @@
                     </div>
 
                     <button type="submit" :disabled="loading"
-                        class="w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 disabled:opacity-60 text-white"
+                        class="w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 disabled:opacity-60"
                         :class="style === 'mystic'
                             ?
-                            'bg-purple-700 hover:bg-purple-800' :
-                            'bg-blue-600 hover:bg-blue-700'">
+                            'bg-purple-700 hover:bg-purple-800 text-purple-100' :
+                            'bg-blue-600 hover:bg-blue-700 text-white'">
 
                         <span x-show="!loading">✨ 開始占卜</span>
 

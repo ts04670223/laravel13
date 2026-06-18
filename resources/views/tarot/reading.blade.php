@@ -195,16 +195,12 @@
                         container.appendChild(userEl);
 
                         // AI 回應泡泡（串流填入）
-                        const replyEl = document.createElement('div');
-                        replyEl.className = 'flex justify-start';
-                        const replySpan = document.createElement('span');
-                        replySpan.className =
-                            'bg-gray-100 text-gray-800 text-sm px-4 py-2 rounded-2xl rounded-tl-sm max-w-xs break-words whitespace-pre-wrap';
-                        replySpan.textContent = '';
-                        replyEl.appendChild(replySpan);
-                        container.appendChild(replyEl);
-                        container.scrollTop = container.scrollHeight;
+                        const replySpan = document.createElement('div'); // 改為 div 以支援區塊排版
+                        replySpan.className = 'prose prose-sm max-w-none text-gray-800';
+                        container.appendChild(replySpan)
 
+                        // 宣告一個變數來儲存完整的原始文字
+                        let rawFullContent = '';
                         try {
                             const res = await fetch('/api/chat/stream', {
                                 method: 'POST',
@@ -244,7 +240,13 @@
                                         continue;
                                     }
                                     if (data.content) {
-                                        replySpan.textContent += data.content;
+                                        rawFullContent += data.content; // 累積原始文字
+
+                                        // 使用 marked 轉換成 HTML，並使用 DOMPurify 清洗
+                                        const cleanHtml = DOMPurify.sanitize(marked.parse(rawFullContent));
+
+                                        // 更新顯示內容
+                                        replySpan.innerHTML = cleanHtml;
                                         container.scrollTop = container.scrollHeight;
                                     }
                                 }
