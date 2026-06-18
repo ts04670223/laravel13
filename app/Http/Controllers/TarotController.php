@@ -77,7 +77,28 @@ class TarotController extends Controller
 
         $cardIds = array_column($reading->drawn_cards, 'card_id');
         $cards   = TarotCard::whereIn('id', $cardIds)->get()->keyBy('id');
+        $content = $reading->ai_interpretation;
+        // 1. 處理標題 (### -> h4, ## -> h3)
+        $content = preg_replace('/### (.*)/', '<h4 class="text-base font-bold mt-4 mb-2">$1</h4>', $content);
+        $content = preg_replace('/## (.*)/', '<h3 class="text-lg font-bold mt-6 mb-3">$1</h3>', $content);
 
+        // 2. 處理粗體
+        $content = preg_replace('/\*\*(.*?)\*\*/', '<strong class="font-bold text-gray-900">$1</strong>', $content);
+
+        // 3. 處理區塊引用 (>)
+        $content = preg_replace('/> (.*)/', '<blockquote class="border-l-4 border-gray-300 pl-4 py-1 italic my-3">$1</blockquote>', $content);
+
+        // 4. 處理分隔線 (---)
+        $content = str_replace('---', '<hr class="my-6 border-gray-200">', $content);
+
+        // 5. 處理列表 (以 - 開頭的項目)
+        // 這裡我們將連續的列表項目用 <ul> 包起來會比較麻煩，
+        // 最簡單的做法是將每一行轉為 <li class="my-1">
+        $content = preg_replace('/- (.*)/', '<li class="ml-4">$1</li>', $content);
+
+        // 6. 將剩下的純文字段落用 <p> 包裹 (處理換行)
+        $content = nl2br($content);
+        $reading['ai_interpretation'] = $content;
         return view('tarot.reading', compact('reading', 'cards'));
     }
 
@@ -110,7 +131,6 @@ class TarotController extends Controller
                 echo 'data: ' . json_encode(['type' => 'done']) . "\n\n";
                 ob_flush();
                 flush();
-
             } catch (\Throwable $e) {
                 echo "event: error\n";
                 echo 'data: ' . json_encode(['message' => $e->getMessage()]) . "\n\n";
