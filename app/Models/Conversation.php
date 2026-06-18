@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
@@ -16,6 +17,7 @@ class Conversation extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'type',
     ];
 
     public function user(): BelongsTo
@@ -26,5 +28,10 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function tarotReading(): HasOne
+    {
+        return $this->hasOne(TarotReading::class);
     }
 }

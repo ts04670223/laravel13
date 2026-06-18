@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('documents')" :active="request()->routeIs('documents')">
                         {{ __('文件') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('tarot.index')" :active="request()->routeIs('tarot.*')">
+                        🔮 {{ __('塔羅') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -81,6 +84,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('documents')" :active="request()->routeIs('documents')">
                 {{ __('文件') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('tarot.index')" :active="request()->routeIs('tarot.*')">
+                🔮 {{ __('塔羅') }}
             </x-responsive-nav-link>
         </div>
 
