@@ -15,6 +15,7 @@ class ConversationFactory extends Factory
         return [
             'user_id' => User::factory(),
             'title' => fake()->sentence(3),
+            'type' => 'chat',
         ];
     }
 }

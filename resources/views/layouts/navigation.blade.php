@@ -15,11 +15,14 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('chat')" :active="request()->routeIs('chat')">
+                    {{-- <x-nav-link :href="route('chat')" :active="request()->routeIs('chat')">
                         {{ __('聊天') }}
                     </x-nav-link>
                     <x-nav-link :href="route('documents')" :active="request()->routeIs('documents')">
                         {{ __('文件') }}
+                    </x-nav-link> --}}
+                    <x-nav-link :href="route('tarot.index')" :active="request()->routeIs('tarot.*')">
+                        🔮 {{ __('塔羅') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -76,11 +79,14 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('chat')" :active="request()->routeIs('chat')">
+            {{-- <x-responsive-nav-link :href="route('chat')" :active="request()->routeIs('chat')">
                 {{ __('聊天') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('documents')" :active="request()->routeIs('documents')">
                 {{ __('文件') }}
+            </x-responsive-nav-link> --}}
+            <x-responsive-nav-link :href="route('tarot.index')" :active="request()->routeIs('tarot.*')">
+                🔮 {{ __('塔羅') }}
             </x-responsive-nav-link>
         </div>
 
