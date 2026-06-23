@@ -63,8 +63,7 @@
                         ⚠️ 解讀中斷，請點擊右上方「重新生成」
                     </div>
                     <div x-show="streamStarted && !streamError">
-                        <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"
-                            x-text="streamContent"></div>
+                        <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed" x-ref="streamBox"></div>
                         <span x-show="streaming"
                             class="inline-block w-0.5 h-4 bg-purple-500 ml-0.5 animate-pulse align-middle"></span>
                     </div>
@@ -160,8 +159,10 @@
                                     } catch {
                                         continue;
                                     }
-
-                                    if (data.content) this.streamContent += data.content;
+                                    if (data.content) {
+                                        this.streamContent += data.content;
+                                        this.$refs.streamBox.innerHTML = simpleMarkdown(this.streamContent);
+                                    }
                                     if (data.type === 'done') {
                                         this.streaming = false;
                                         this.streamDone = true;
@@ -173,6 +174,7 @@
                                 }
                             }
                         } catch (e) {
+                            console.log(e);
                             this.streaming = false;
                             this.streamError = true;
                         }
@@ -191,8 +193,10 @@
                         const userEl = document.createElement('div');
                         userEl.className = 'flex justify-end';
                         userEl.innerHTML =
-                            `<span class="bg-purple-50 text-purple-900 text-sm px-4 py-2 rounded-2xl rounded-tr-sm max-w-xs break-words">${this.escapeHtml(msg)}</span>`;
+                            `<span
+            class="bg-purple-50 text-purple-900 text-sm px-4 py-2 rounded-2xl rounded-tr-sm max-w-xs break-words">${this.escapeHtml(msg)}</span>`;
                         container.appendChild(userEl);
+                        container.scrollTop = container.scrollHeight;
 
                         // AI 回應泡泡（串流填入）
                         const replySpan = document.createElement('div'); // 改為 div 以支援區塊排版
@@ -240,13 +244,8 @@
                                         continue;
                                     }
                                     if (data.content) {
-                                        rawFullContent += data.content; // 累積原始文字
-
-                                        // 使用 marked 轉換成 HTML，並使用 DOMPurify 清洗
-                                        const cleanHtml = DOMPurify.sanitize(marked.parse(rawFullContent));
-
-                                        // 更新顯示內容
-                                        replySpan.innerHTML = cleanHtml;
+                                        rawFullContent += data.content;
+                                        replySpan.innerHTML = simpleMarkdown(rawFullContent);
                                         container.scrollTop = container.scrollHeight;
                                     }
                                 }
@@ -262,6 +261,88 @@
                         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     },
                 };
+            }
+
+            function simpleMarkdown(str) {
+                let content = str;
+
+                // 0. 表格（放在最前面處理）
+                content = content.replace(/^\|(.+)\|$/gm, (match) => match); // 先標記表格行
+
+                const lines = content.split('\n');
+                let result = [];
+                let tableLines = [];
+                let inTable = false;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+
+                    if (line.startsWith('|') && line.endsWith('|')) {
+                        inTable = true;
+                        tableLines.push(line);
+                    } else {
+                        if (inTable) {
+                            result.push(buildTable(tableLines));
+                            tableLines = [];
+                            inTable = false;
+                        }
+                        result.push(lines[i]);
+                    }
+                }
+                if (inTable) result.push(buildTable(tableLines));
+
+                content = result.join('\n');
+
+                // 1. 標題
+                content = content.replace(/^### (.*)$/gm, '<h4 class="text-base font-bold mt-4 mb-2">$1</h4>');
+                content = content.replace(/^## (.*)$/gm, '<h3 class="text-lg font-bold mt-6 mb-3">$1</h3>');
+
+                // 2. 粗體
+                content = content.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
+
+                // 3. 區塊引用
+                content = content.replace(/^> (.*)$/gm,
+                    '<blockquote class="border-l-4 border-gray-300 pl-4 py-1 italic my-3">$1</blockquote>');
+
+                // 4. 分隔線
+                content = content.replace(/---/g, '<hr class="my-6 border-gray-200">');
+
+                // 5. 列表
+                content = content.replace(/^- (.*)$/gm, '<li class="ml-4">$1</li>');
+
+                // 6. 換行
+                content = content.replace(/\n/g, '<br>');
+
+                return content;
+            }
+
+            function buildTable(lines) {
+                // 過濾掉分隔線（|----|）
+                const rows = lines.filter(line => !/^\|[\s\-\|]+\|$/.test(line));
+
+                if (rows.length === 0) return '';
+
+                let html = '<table class="w-full border-collapse my-4 text-sm">';
+
+                rows.forEach((row, index) => {
+                    const cells = row
+                        .split('|')
+                        .slice(1, -1) // 去掉首尾空字串
+                        .map(cell => cell.trim());
+
+                    const tag = index === 0 ? 'th' : 'td';
+                    const thClass = 'class="border border-gray-300 px-3 py-2 bg-gray-50 font-bold text-left"';
+                    const tdClass = 'class="border border-gray-300 px-3 py-2 align-top"';
+
+                    html += '<tr>';
+                    cells.forEach(cell => {
+                        html += `<${tag} ${index === 0 ? thClass : tdClass}>${cell}</${tag}>`;
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</table>';
+                return html;
             }
         </script>
     @endpush

@@ -78,6 +78,30 @@ class TarotController extends Controller
         $cardIds = array_column($reading->drawn_cards, 'card_id');
         $cards   = TarotCard::whereIn('id', $cardIds)->get()->keyBy('id');
         $content = $reading->ai_interpretation;
+        $lines = explode("\n", $content);
+        $result = [];
+        $tableLines = [];
+        $inTable = false;
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if (str_starts_with($trimmed, '|') && str_ends_with($trimmed, '|')) {
+                $inTable = true;
+                $tableLines[] = $trimmed;
+            } else {
+                if ($inTable) {
+                    $result[] = $this->buildTable($tableLines);
+                    $tableLines = [];
+                    $inTable = false;
+                }
+                $result[] = $line;
+            }
+        }
+        if ($inTable) {
+            $result[] = $this->buildTable($tableLines);
+        }
+
+        $content = implode("\n", $result);
         // 1. 處理標題 (### -> h4, ## -> h3)
         $content = preg_replace('/### (.*)/', '<h4 class="text-base font-bold mt-4 mb-2">$1</h4>', $content);
         $content = preg_replace('/## (.*)/', '<h3 class="text-lg font-bold mt-6 mb-3">$1</h3>', $content);
@@ -143,5 +167,37 @@ class TarotController extends Controller
             'Connection'        => 'keep-alive',
             'X-Accel-Buffering' => 'no',
         ]);
+    }
+
+    private function buildTable(array $lines): string
+    {
+        // 過濾分隔線（|---|---|）
+        $rows = array_filter($lines, fn($line) => !preg_match('/^\|[\s\-\|]+\|$/', $line));
+        $rows = array_values($rows);
+
+        if (empty($rows)) return '';
+
+        $html = '<table class="w-full border-collapse my-4 text-sm">';
+
+        foreach ($rows as $index => $row) {
+            $cells = explode('|', $row);
+            // 去掉首尾空元素
+            array_shift($cells);
+            array_pop($cells);
+
+            $tag = $index === 0 ? 'th' : 'td';
+            $class = $index === 0
+                ? 'class="border border-gray-300 px-3 py-2 bg-gray-50 font-bold text-left"'
+                : 'class="border border-gray-300 px-3 py-2 align-top"';
+
+            $html .= '<tr>';
+            foreach ($cells as $cell) {
+                $html .= "<{$tag} {$class}>" . trim($cell) . "</{$tag}>";
+            }
+            $html .= '</tr>';
+        }
+
+        $html .= '</table>';
+        return $html;
     }
 }
